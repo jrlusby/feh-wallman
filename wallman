@@ -8,6 +8,7 @@ from os.path import expanduser
 parser = argparse.ArgumentParser(description='Personalized Wallpaper managing')
 
 parser.add_argument('-r', '--random-wallpaper', action='store_true', help='pick a random wallpaper and display it')
+parser.add_argument('-u', '--undo', action='store_true', help='go back one wallpaper in the history')
 
 args = parser.parse_args()
 home = expanduser("~")
@@ -15,3 +16,5 @@ home = expanduser("~")
 if args.random_wallpaper:
     r_wallpaper = random.choice(os.listdir(home + '/.wallpaper'))
     subprocess.call(['feh', '--bg-max', home+'/.wallpaper/'+r_wallpaper])
+if args.undo:
+    print('go back one wallpaper please')
