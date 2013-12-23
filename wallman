@@ -1,0 +1,17 @@
+#! /bin/python3
+
+import argparse
+import subprocess
+import os, random
+from os.path import expanduser
+
+parser = argparse.ArgumentParser(description='Personalized Wallpaper managing')
+
+parser.add_argument('-r', '--random-wallpaper', action='store_true', help='pick a random wallpaper and display it')
+
+args = parser.parse_args()
+home = expanduser("~")
+
+if args.random_wallpaper:
+    r_wallpaper = random.choice(os.listdir(home + '/.wallpaper'))
+    subprocess.call(['feh', '--bg-max', home+'/.wallpaper/'+r_wallpaper])
