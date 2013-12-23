@@ -4,16 +4,39 @@ import argparse
 import subprocess
 import os, random
 from os.path import expanduser
+import sys
 
-parser = argparse.ArgumentParser(description='Personalized Wallpaper managing')
-
-parser.add_argument('-r', '--random-wallpaper', action='store_true', help='pick a random wallpaper and display it')
-parser.add_argument('-u', '--undo', action='store_true', help='go back one wallpaper in the history')
-
-args = parser.parse_args()
 home = expanduser("~")
 history_file = home+'/.wallman_history'
 history_length = 10
+
+def main(argv):
+    parser = argparse.ArgumentParser(description='Personalized Wallpaper managing')
+
+    parser.add_argument('-r', '--random-wallpaper', action='store_true', help='pick a random wallpaper and display it')
+    parser.add_argument('-u', '--undo', action='store_true', help='go back one wallpaper in the history')
+
+    args = parser.parse_args()
+
+    if args.random_wallpaper:
+        r_wallpaper = random.choice(os.listdir(home + '/.wallpaper'))
+        # print(r_wallpaper)
+        subprocess.call(['feh', '--bg-max', home+'/.wallpaper/'+r_wallpaper])
+        writeToHistory(home+'/.wallpaper/'+r_wallpaper+'\n')
+    if args.undo:
+        hist_fd = open(history_file)
+        hist_fd.readline()
+        prev_wallpaper = hist_fd.readline().strip()
+        # print(prev_wallpaper)
+        subprocess.call(['feh', '--bg-max', prev_wallpaper])
+        output = [prev_wallpaper+'\n']
+        for line in hist_fd:
+            output.append(line)
+        hist_fd.close
+        hist_fd = open(history_file, 'w')
+        hist_fd.writelines(output)
+        hist_fd.close()
+        # print('go back one wallpaper please')
 
 def writeToHistory(wallpaper):
     hist_fd = open(history_file)
@@ -26,23 +49,5 @@ def writeToHistory(wallpaper):
     hist_fd.writelines(output)
     hist_fd.close()
 
-if args.random_wallpaper:
-    r_wallpaper = random.choice(os.listdir(home + '/.wallpaper'))
-    # print(r_wallpaper)
-    subprocess.call(['feh', '--bg-max', home+'/.wallpaper/'+r_wallpaper])
-    writeToHistory(home+'/.wallpaper/'+r_wallpaper+'\n')
-if args.undo:
-    hist_fd = open(history_file)
-    hist_fd.readline()
-    prev_wallpaper = hist_fd.readline().strip()
-    # print(prev_wallpaper)
-    subprocess.call(['feh', '--bg-max', prev_wallpaper])
-    output = [prev_wallpaper+'\n']
-    for line in hist_fd:
-        output.append(line)
-    hist_fd.close
-    hist_fd = open(history_file, 'w')
-    hist_fd.writelines(output)
-    hist_fd.close()
-    # print('go back one wallpaper please')
-
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
