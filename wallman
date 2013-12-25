@@ -32,7 +32,6 @@ def main(argv):
         output = [prev_wallpaper+'\n']
         for line in hist_fd:
             output.append(line)
-        hist_fd.close
         hist_fd = open(history_file, 'w')
         hist_fd.writelines(output)
         hist_fd.close()
@@ -48,6 +47,19 @@ def writeToHistory(wallpaper):
     hist_fd = open(history_file, 'w')
     hist_fd.writelines(output)
     hist_fd.close()
+
+def deleteCurrentWallpaper():
+    if input('ARE YOU SURE? [Yes/No]') == 'Yes':
+        hist_fd = open(history_file)
+        shitty_wallpaper = hist_fd.readline()
+        #remove the wallpaper
+        output = []
+        for line in hist_fd:
+            output.append(line)
+        hist_fd.close()
+        
+    else:
+        print('You didnt type Yes so I no delete-y')
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
