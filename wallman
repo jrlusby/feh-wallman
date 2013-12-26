@@ -15,19 +15,26 @@ def main(argv):
 
     parser.add_argument('-r', '--random-wallpaper', action='store_true', help='pick a random wallpaper and display it')
     parser.add_argument('-u', '--undo', action='store_true', help='go back one wallpaper in the history')
+    parser.add_argument('-s', '--sources', nargs='+', help='allows user to specify non standard wallpaper directory, or multiple wallpaper directories')
 
     args = parser.parse_args()
 
+    if not args.sources:
+        sources = [home+'/.wallpaper']
+    else:
+        sources = args.sources
+
     if args.random_wallpaper:
-        r_wallpaper = random.choice(os.listdir(home + '/.wallpaper'))
-        # print(r_wallpaper)
-        subprocess.call(['feh', '--bg-max', home+'/.wallpaper/'+r_wallpaper])
-        writeToHistory(home+'/.wallpaper/'+r_wallpaper+'\n')
+        choices = []
+        for directory in sources:
+            choices = choices + [os.path.join(dp, f) for dp, dn, fn in os.walk(directory) for f in fn]
+        r_wallpaper = random.choice(choices)
+        subprocess.call(['feh', '--bg-max', r_wallpaper])
+        writeToHistory(r_wallpaper+'\n')
     if args.undo:
         hist_fd = open(history_file)
         hist_fd.readline()
         prev_wallpaper = hist_fd.readline().strip()
-        # print(prev_wallpaper)
         subprocess.call(['feh', '--bg-max', prev_wallpaper])
         output = [prev_wallpaper+'\n']
         for line in hist_fd:
@@ -35,7 +42,6 @@ def main(argv):
         hist_fd = open(history_file, 'w')
         hist_fd.writelines(output)
         hist_fd.close()
-        # print('go back one wallpaper please')
 
 def writeToHistory(wallpaper):
     hist_fd = open(history_file)
