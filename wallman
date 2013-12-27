@@ -11,12 +11,15 @@ history_file = home+'/.wallman_history'
 history_length = 10
 
 def main(argv):
-    parser = argparse.ArgumentParser(description='Personalized Wallpaper managing')
-
-    parser.add_argument('-r', '--random-wallpaper', action='store_true', help='pick a random wallpaper and display it')
-    parser.add_argument('-u', '--undo', action='store_true', help='go back one wallpaper in the history')
-    parser.add_argument('-s', '--sources', nargs='+', help='allows user to specify non standard wallpaper directory, or multiple wallpaper directories')
-
+    parser = argparse.ArgumentParser(
+            description='Personalized Wallpaper managing')
+    parser.add_argument('-r', '--random-wallpaper', action='store_true', 
+            help='pick a random wallpaper and display it')
+    parser.add_argument('-u', '--undo', action='store_true', 
+            help='go back one wallpaper in the history')
+    parser.add_argument('-s', '--sources', nargs='+', help='allows user to \
+            specify non standard wallpaper directory, or multiple wallpaper \
+            directories')
     args = parser.parse_args()
 
     if not args.sources:
@@ -27,7 +30,8 @@ def main(argv):
     if args.random_wallpaper:
         choices = []
         for directory in sources:
-            choices = choices + [os.path.join(dp, f) for dp, dn, fn in os.walk(directory) for f in fn]
+            choices = choices + [os.path.join(dp, f) for dp, dn, fn in 
+                    os.walk(directory) for f in fn]
         r_wallpaper = random.choice(choices)
         subprocess.call(['feh', '--bg-max', r_wallpaper])
         writeToHistory(r_wallpaper+'\n')
