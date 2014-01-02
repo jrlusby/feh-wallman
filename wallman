@@ -28,11 +28,7 @@ def main(argv):
         sources = args.sources
 
     if args.random_wallpaper:
-        choices = []
-        for directory in sources:
-            choices = choices + [os.path.join(dp, f) for dp, dn, fn in 
-                    os.walk(directory) for f in fn]
-        r_wallpaper = random.choice(choices)
+        r_wallpaper = randFile(sources, balance_prob=True)
         subprocess.call(['feh', '--bg-max', r_wallpaper])
         writeToHistory(r_wallpaper+'\n')
     if args.undo:
@@ -46,6 +42,17 @@ def main(argv):
         hist_fd = open(history_file, 'w')
         hist_fd.writelines(output)
         hist_fd.close()
+
+def randFile(directories, balance_prob=False):
+    choices = []
+    if balance_prob:
+        choices = [os.path.join(dp, f) for dp, dn, fn in
+                os.walk(random.choice(directories)) for f in fn]
+    else:
+        for directory in directories:
+            choices = choices + [os.path.join(dp, f) for dp, dn, fn in
+                    os.walk(directory) for f in fn]
+    return random.choice(choices)
 
 def writeToHistory(wallpaper):
     hist_fd = open(history_file)
