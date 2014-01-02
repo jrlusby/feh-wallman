@@ -30,9 +30,11 @@ def main(argv):
         sources = [home+'/.wallpaper']
     else:
         sources = args.sources
+    
+    r_wallpaper = randFile(sources, args.balance_prob, args.recurse)
+    print(r_wallpaper)
 
     if args.random_wallpaper:
-        r_wallpaper = randFile(sources, args.balance_prob, args.recurse)
         subprocess.call(['feh', '--bg-max', r_wallpaper.strip()])
         writeToHistory(r_wallpaper+'\n')
     if args.undo:
@@ -45,22 +47,16 @@ def main(argv):
 
 def randFile(directories, balance_prob=False, recurse=False):
     choices = []
+    import glob
+    if recurse:
+        for dir in directories:
+            directories = directories + [x[0] for x in os.walk(dir) if glob.glob(os.path.join(x[0], '*.*'))]
+        directories = list(set(directories))
     if balance_prob:
-        if recurse:
-            choices = [os.path.join(dp, f) for dp, dn, fn in
-                    os.walk(random.choice(directories)) for f in fn]
-        else:
-            import glob
-            choices = glob.glob(random.choice(directories)+"/*.*")
+        choices = glob.glob(random.choice(directories)+"/*.*")
     else:
-        if recurse:
-            for directory in directories:
-                choices = choices + [os.path.join(dp, f) for dp, dn, fn in
-                        os.walk(directory) for f in fn]
-        else:
-            for directory in directories:
-                import glob
-                choices = choices + glob.glob(directory+"/*.*")
+        for directory in directories:
+            choices = choices + glob.glob(directory+"/*.*")
     return random.choice(choices)
 
 def listFromHistory(indexes=range(0,history_length)):
