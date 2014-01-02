@@ -27,6 +27,8 @@ def main(argv):
     else:
         sources = args.sources
 
+    print(listFromHistory([1,4]))
+
     if args.random_wallpaper:
         r_wallpaper = randFile(sources, balance_prob=True)
         subprocess.call(['feh', '--bg-max', r_wallpaper])
@@ -53,6 +55,15 @@ def randFile(directories, balance_prob=False):
             choices = choices + [os.path.join(dp, f) for dp, dn, fn in
                     os.walk(directory) for f in fn]
     return random.choice(choices)
+
+def listFromHistory(indexes):
+    hist_pics = []
+    with open(history_file) as hist_fd:
+        lines = hist_fd.readlines()
+        for index in indexes:
+            hist_pics.append(lines[index].strip())
+    return hist_pics
+
 
 def writeToHistory(wallpaper):
     hist_fd = open(history_file)
