@@ -20,6 +20,10 @@ def main(argv):
     parser.add_argument('-s', '--sources', nargs='+', help='allows user to \
             specify non standard wallpaper directory, or multiple wallpaper \
             directories')
+    parser.add_argument('-b', '--balance-prob', action='store_true',
+            help='make chance of picking from any given directory equal')
+    parser.add_argument('--recurse', action='store_true', 
+            help='recursively search subdirectories')
     args = parser.parse_args()
 
     if not args.sources:
@@ -27,41 +31,45 @@ def main(argv):
     else:
         sources = args.sources
 
-    print(listFromHistory([1,4]))
-
     if args.random_wallpaper:
-        r_wallpaper = randFile(sources, balance_prob=True)
-        subprocess.call(['feh', '--bg-max', r_wallpaper])
+        r_wallpaper = randFile(sources, args.balance_prob, args.recurse)
+        subprocess.call(['feh', '--bg-max', r_wallpaper.strip()])
         writeToHistory(r_wallpaper+'\n')
     if args.undo:
-        hist_fd = open(history_file)
-        hist_fd.readline()
-        prev_wallpaper = hist_fd.readline().strip()
-        subprocess.call(['feh', '--bg-max', prev_wallpaper])
-        output = [prev_wallpaper+'\n']
-        for line in hist_fd:
-            output.append(line)
+        history = listFromHistory()
+        subprocess.call(['feh', '--bg-max', history[1].strip()])
+        del history[0]
         hist_fd = open(history_file, 'w')
-        hist_fd.writelines(output)
+        hist_fd.writelines(history)
         hist_fd.close()
 
-def randFile(directories, balance_prob=False):
+def randFile(directories, balance_prob=False, recurse=False):
     choices = []
     if balance_prob:
-        choices = [os.path.join(dp, f) for dp, dn, fn in
-                os.walk(random.choice(directories)) for f in fn]
+        if recurse:
+            choices = [os.path.join(dp, f) for dp, dn, fn in
+                    os.walk(random.choice(directories)) for f in fn]
+        else:
+            import glob
+            choices = glob.glob(random.choice(directories)+"/*.*")
     else:
-        for directory in directories:
-            choices = choices + [os.path.join(dp, f) for dp, dn, fn in
-                    os.walk(directory) for f in fn]
+        if recurse:
+            for directory in directories:
+                choices = choices + [os.path.join(dp, f) for dp, dn, fn in
+                        os.walk(directory) for f in fn]
+        else:
+            for directory in directories:
+                import glob
+                choices = choices + glob.glob(directory+"/*.*")
     return random.choice(choices)
 
-def listFromHistory(indexes):
+def listFromHistory(indexes=range(0,history_length)):
     hist_pics = []
     with open(history_file) as hist_fd:
         lines = hist_fd.readlines()
         for index in indexes:
-            hist_pics.append(lines[index].strip())
+            if index < len(lines):
+                hist_pics.append(lines[index])
     return hist_pics
 
 
