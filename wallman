@@ -1,4 +1,4 @@
-#! /bin/python3
+#! /bin/python2.7
 
 import argparse
 import subprocess
@@ -24,6 +24,8 @@ def main(argv):
             help='make chance of picking from any given directory equal')
     parser.add_argument('--recurse', action='store_true', 
             help='recursively search subdirectories')
+    parser.add_argument('-f', '--filter', help='filters images based on \
+            aspect ratio')
     args = parser.parse_args()
 
     if not args.sources:
@@ -31,11 +33,12 @@ def main(argv):
     else:
         sources = args.sources
     
-    r_wallpaper = randFile(sources, args.balance_prob, args.recurse)
+    r_wallpaper = randFile(sources, args.filter, args.balance_prob, args.recurse)
     print(r_wallpaper)
 
     if args.random_wallpaper:
-        subprocess.call(['feh', '--bg-max', r_wallpaper.strip()])
+        #subprocess.call(['feh', '--bg-max', r_wallpaper.strip()])
+        subprocess.call(['feh', '--bg-fill', r_wallpaper.strip()])
         writeToHistory(r_wallpaper+'\n')
     if args.undo:
         history = listFromHistory()
@@ -45,19 +48,31 @@ def main(argv):
         hist_fd.writelines(history)
         hist_fd.close()
 
-def randFile(directories, balance_prob=False, recurse=False):
+def randFile(directories, filter, balance_prob=False, recurse=False):
     choices = []
     import glob
     if recurse:
         for dir in directories:
-            directories = directories + [x[0] for x in os.walk(dir) if glob.glob(os.path.join(x[0], '*.*'))]
+            directories = directories + [x[0] for x in os.walk(dir)]
         directories = list(set(directories))
+    directories[:] = [x for x in directories if glob.glob(x+"/*.*") != []]
     if balance_prob:
         choices = glob.glob(random.choice(directories)+"/*.*")
     else:
         for directory in directories:
             choices = choices + glob.glob(directory+"/*.*")
-    return random.choice(choices)
+    filtered_choices = []
+    if filter:
+        width, height = filter.split('x')
+        from PIL import Image
+        for file in choices:
+            im = Image.open(file)
+            imwidth, imheight = im.size
+            if (float(imwidth) / float(imheight)) >= (float(width) / float(height)):
+                filtered_choices.append(file)
+    else:
+        filtered_choices = choices
+    return random.choice(filtered_choices)
 
 def listFromHistory(indexes=range(0,history_length)):
     hist_pics = []
