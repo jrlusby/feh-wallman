@@ -17,15 +17,17 @@ def main(argv):
             help='pick a random wallpaper and display it')
     parser.add_argument('-u', '--undo', action='store_true', 
             help='go back one wallpaper in the history')
-    parser.add_argument('-s', '--sources', nargs='+', help='allows user to \
-            specify non standard wallpaper directory, or multiple wallpaper \
-            directories')
+    parser.add_argument('-s', '--sources', nargs='+', 
+            help='allows user to specify non standard wallpaper directory, \
+                  or multiple wallpaper directories')
     parser.add_argument('-b', '--balance-prob', action='store_true',
             help='make chance of picking from any given directory equal')
     parser.add_argument('--recurse', action='store_true', 
             help='recursively search subdirectories')
-    parser.add_argument('-f', '--filter', help='filters images based on \
-            aspect ratio')
+    parser.add_argument('-f', '--filter', 
+            help='filters images based on aspect ratio')
+    parser.add_argument('-d', '--delete', action='store_true', 
+            help='delete current wallpaper')
     args = parser.parse_args()
 
     if not args.sources:
@@ -33,12 +35,10 @@ def main(argv):
     else:
         sources = args.sources
     
-    r_wallpaper = randFile(sources, args.filter, args.balance_prob, args.recurse)
-    print(r_wallpaper)
 
     if args.random_wallpaper:
-        #subprocess.call(['feh', '--bg-max', r_wallpaper.strip()])
-        subprocess.call(['feh', '--bg-fill', r_wallpaper.strip()])
+        r_wallpaper = randFile(sources, args.filter, args.balance_prob, args.recurse)
+        subprocess.call(['feh', '--bg-max', r_wallpaper.strip()])
         writeToHistory(r_wallpaper+'\n')
     if args.undo:
         history = listFromHistory()
@@ -47,6 +47,8 @@ def main(argv):
         hist_fd = open(history_file, 'w')
         hist_fd.writelines(history)
         hist_fd.close()
+    if args.delete:
+        deleteCurrentWallpaper()
 
 def randFile(directories, filter, balance_prob=False, recurse=False):
     choices = []
@@ -96,15 +98,21 @@ def writeToHistory(wallpaper):
     hist_fd.close()
 
 def deleteCurrentWallpaper():
-    if input('ARE YOU SURE? [Yes/No]') == 'Yes':
+    print(listFromHistory())
+    if raw_input('ARE YOU SURE? [Yes/No]') == 'Yes':
         hist_fd = open(history_file)
         shitty_wallpaper = hist_fd.readline()
         #remove the wallpaper
+        print("rremove -f {}".format(shitty_wallpaper))
+        os.remove(shitty_wallpaper.strip())
         output = []
         for line in hist_fd:
             output.append(line)
+        subprocess.call(['feh', '--bg-max', output[0].strip()])
         hist_fd.close()
-        
+        hist_fd = open(history_file, 'w')
+        hist_fd.writelines(output)
+        hist_fd.close()
     else:
         print('You didnt type Yes so I no delete-y')
 
